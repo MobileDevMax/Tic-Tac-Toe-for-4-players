@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(TicTacToeApp());
+}
+
+class TicTacToeApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Tic Tac Toe for 4 players',
+      home: TicTacToeGame(),
+    );
+  }
+}
+
+class TicTacToeGame extends StatefulWidget {
+  @override
+  _TicTacToeGameState createState() => _TicTacToeGameState();
+}
+
+class _TicTacToeGameState extends State<TicTacToeGame> {
+  final int size = 5;
+  List<List<String?>> board;
+  int currentPlayer;
+  List<String> symbols;
+
+  _TicTacToeGameState()
+      : board = List.generate(5, (_) => List.filled(5, null)),
+        currentPlayer = 0,
+        symbols = ['X', 'O', '▲', '◼'];
+
+  void _makeMove(int row, int col) {
+    if (board[row][col] == null) {
+      setState(() {
+        board[row][col] = symbols[currentPlayer];
+        if (_checkWin(row, col)) {
+          _showDialog('Player ${currentPlayer + 1} win!');
+        } else {
+          currentPlayer = (currentPlayer + 1) % 4;
+        }
+      });
+    }
+  }
+
+  bool _checkWin(int row, int col) {
+    return _checkDirection(row, col, 1, 0) || // Horizontal
+        _checkDirection(row, col, 0, 1) || // Vertical
+        _checkDirection(row, col, 1, 1) || // Diagonal \
+        _checkDirection(row, col, 1, -1); // Diagonal /
+  }
+
+  bool _checkDirection(int row, int col, int deltaRow, int deltaCol) {
+    String? symbol = board[row][col];
+    if (symbol == null)
+      return false; 
+
+    int count = 1;
+
+// Check in the positive direction
+    for (int i = 1; i < 5; i++) {
+      int r = row + deltaRow * i;
+      int c = col + deltaCol * i;
+      if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == symbol) {
+        count++;
+      } else {
+        break;
+      }
+    }
+
+// Check in the negative direction
+    for (int i = 1; i < 5; i++) {
+      int r = row - deltaRow * i;
+      int c = col - deltaCol * i;
+      if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == symbol) {
+        count++;
+      } else {
+        break;
+      }
+    }
+
+    return count >= 3;
+  }
+
+  void _showDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(message),
+        actions: [
+          TextButton(
+            child: Text('OK'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _resetGame();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _resetGame() {
+    setState(() {
+      board = List.generate(5, (_) => List.filled(5, null));
+      currentPlayer = 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Tic Tac Toe for 4 players')),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (int row = 0; row < size; row++)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (int col = 0; col < size; col++)
+                  GestureDetector(
+                    onTap: () => _makeMove(row, col),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black),
+                        color: board[row][col] != null
+                            ? Colors.grey
+                            : Colors.white,
+                      ),
+                      child: Center(
+                        child: Text(
+                          board[row][col] ?? '',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
